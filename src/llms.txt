@@ -1,0 +1,69 @@
+# Voidbox API
+
+> Disposable temporary email service. Register an inbox, receive emails, read and delete them. All inboxes auto-expire after 1 hour. Powered by Cloudflare Workers + D1.
+
+All API endpoints require authentication via Bearer token in the `Authorization` header:
+
+```
+Authorization: Bearer <TOKEN>
+```
+
+All timestamps are Unix seconds (integer). Inbox addresses are full email format like `user@domain.com`. URL parameters containing `@` must be percent-encoded as `%40`.
+
+## API Endpoints
+
+### Configuration
+
+- `GET /api/config`: Returns available mail domains. Response: `{"mailDomains": ["domain.com"]}`
+
+### Inbox Management
+
+- `POST /api/inbox/{inbox}`: Register a new inbox. `inbox` is a full email address (e.g., `test%40domain.com`). Returns `{"inbox", "createdAt", "expiresAt"}` with status 201. Returns 409 if already registered, 400 if invalid address.
+- `GET /api/inbox/{inbox}/status`: Get inbox TTL status. Returns `{"inbox", "createdAt", "expiresAt"}`. Returns 404 if expired or not found.
+- `PUT /api/inbox/{inbox}/renew`: Extend inbox TTL by 1 hour from now. Returns updated `{"inbox", "createdAt", "expiresAt"}`. Returns 404 if expired.
+- `DELETE /api/inbox/{inbox}`: Delete inbox and all its emails. Returns `{"ok": true}`.
+- `DELETE /api/inbox/{inbox}/emails`: Clear all emails but keep the inbox active. Returns `{"ok": true}`.
+
+### Email Listing
+
+- `GET /api/inbox/{inbox}`: List all emails for an inbox, newest first. Returns `{"emails": [{"id", "from", "forwardFrom", "subject", "receivedAt"}]}`.
+- `GET /api/inbox/{inbox}/from/{sender}`: Filter emails by exact sender address (case-insensitive).
+- `GET /api/inbox/{inbox}/forward_from/{forwarder}`: Filter emails by forwarding source address (case-insensitive).
+
+### Email Operations
+
+- `GET /api/mail/{inbox}/{id}`: Get full email content. Returns `{"id", "from", "forwardFrom", "inbox", "subject", "text", "html", "headers", "receivedAt"}`. Returns 404 if not found.
+- `DELETE /api/mail/{inbox}/{id}`: Delete a single email. Returns `{"ok": true}`.
+
+## Usage Example
+
+```
+# 1. Get available domains
+GET /api/config
+
+# 2. Register an inbox
+POST /api/inbox/mytest%40domain.com
+
+# 3. (Send an email to mytest@domain.com from external service)
+
+# 4. List received emails
+GET /api/inbox/mytest%40domain.com
+
+# 5. Read email content
+GET /api/mail/mytest%40domain.com/{emailId}
+
+# 6. Extend inbox lifetime
+PUT /api/inbox/mytest%40domain.com/renew
+
+# 7. Cleanup
+DELETE /api/inbox/mytest%40domain.com
+```
+
+## Constraints
+
+- Inbox TTL: 1 hour (extendable via renew)
+- Max inboxes: 50 (configurable, FIFO eviction)
+- Max emails per inbox: 100 (configurable, oldest evicted first)
+- Max email size: 256 KB (configurable, oversized emails rejected)
+- Local part: 1-64 chars, alphanumeric + `.` `_` `-` `+` only
+- Domain must be in the allowed list (see GET /api/config)

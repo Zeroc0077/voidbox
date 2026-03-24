@@ -1,0 +1,18 @@
+name = "voidbox"
+main = "src/entry.mjs"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+MAX_MAILS_PER_INBOX = "100"
+MAX_INBOXES = "50"
+MAX_MAIL_SIZE = "262144"
+MAIL_DOMAINS = "your-domain.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "<YOUR_D1_DATABASE_NAME>"
+database_id = "<YOUR_D1_DATABASE_ID>"
+migrations_dir = "migrations"
