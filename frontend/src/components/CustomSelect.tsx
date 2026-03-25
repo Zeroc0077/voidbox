@@ -4,9 +4,11 @@ interface Props {
   options: string[];
   value: string;
   onChange: (value: string) => void;
+  displayFn?: (value: string) => string;
 }
 
 export default function CustomSelect(props: Props) {
+  const display = (v: string) => props.displayFn ? props.displayFn(v) : v;
   const [open, setOpen] = createSignal(false);
   let ref: HTMLDivElement | undefined;
 
@@ -20,7 +22,7 @@ export default function CustomSelect(props: Props) {
   return (
     <div class={`custom-select ${open() ? "open" : ""}`} ref={ref}>
       <div class="custom-select-trigger" onClick={() => setOpen(!open())}>
-        {props.value || "\u00A0"}
+        {display(props.value) || "\u00A0"}
       </div>
       <div class="custom-select-options">
         <For each={props.options}>
@@ -32,7 +34,7 @@ export default function CustomSelect(props: Props) {
                 setOpen(false);
               }}
             >
-              {d}
+              {display(d)}
             </div>
           )}
         </For>

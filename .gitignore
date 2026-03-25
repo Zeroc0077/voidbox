@@ -21,6 +21,10 @@ Thumbs.db
 # Dev docs (not for distribution)
 /docs/superpowers/
 
+# Setup tool
+setup/node_modules/
+setup/package-lock.json
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

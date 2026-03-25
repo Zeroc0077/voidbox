@@ -73,6 +73,35 @@ After deploying, configure Cloudflare to forward emails to your Worker:
 2. Optional: To use a subdomain, go to Email Routing > Settings > Subdomains and add your subdomain
 3. Optional: You can bind more than one domain catch-all rules to `voidbox`
 
+### CLI Setup Tool
+
+A CLI tool to manage Cloudflare Email Routing configuration without the Dashboard:
+
+```bash
+cd setup
+npm install
+npm run email-setup
+```
+
+Or with API token as env var:
+
+```bash
+cd setup
+CF_API_TOKEN=xxx npm run email-setup
+```
+
+The tool supports:
+- Enable/disable zone email routing
+- Add/remove subdomain email routing, wildcard supported
+- Configure catch-all → Worker
+- Scan email routing domains across all zones
+
+Required API Token permissions:
+- Email Routing Rules: Edit
+- Zone Settings: Edit
+- Zone: Read
+- DNS: Edit
+
 ## Configuration
 
 | Variable | Default | Example | Description |

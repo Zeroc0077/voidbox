@@ -9,6 +9,7 @@ use crate::types::*;
 
 /// Validate that an inbox address has a valid local part and an allowed domain.
 /// Local part: 1-64 chars, alphanumeric + `.` `_` `-` `+` only.
+/// Domains support wildcards: `*.example.com` matches any `sub.example.com`.
 fn is_valid_inbox(inbox: &str, domains: &[String]) -> bool {
     let Some((local, domain)) = inbox.split_once('@') else { return false };
     if local.is_empty() || local.len() > 64 {
@@ -17,7 +18,14 @@ fn is_valid_inbox(inbox: &str, domains: &[String]) -> bool {
     if !local.bytes().all(|b| b.is_ascii_alphanumeric() || b"._-+".contains(&b)) {
         return false;
     }
-    domains.iter().any(|d| d == domain)
+    domains.iter().any(|d| {
+        if let Some(suffix) = d.strip_prefix("*.") {
+            // Wildcard: domain must end with .suffix and have at least one label before it
+            domain.ends_with(suffix) && domain.len() > suffix.len() + 1 && domain.as_bytes()[domain.len() - suffix.len() - 1] == b'.'
+        } else {
+            d == domain
+        }
+    })
 }
 
 /// POST /api/inbox/:inbox
