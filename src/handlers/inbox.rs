@@ -69,7 +69,7 @@ pub async fn clear_emails(inbox_param: &str, env: &Env) -> Result<Response> {
 ///
 /// List all emails in an inbox, sorted by newest first.
 ///
-/// - 200: `{"emails": [{"id", "from", "forwardFrom", "subject", "receivedAt"}]}`
+/// - 200: `{"emails": [{"id", "from", "subject", "receivedAt"}]}`
 pub async fn list(inbox_param: &str, env: &Env) -> Result<Response> {
     let emails = service::mail::list_all(env, &decode_param(inbox_param)).await?;
     json_response(&InboxResponse { emails }, 200)
@@ -82,16 +82,6 @@ pub async fn list(inbox_param: &str, env: &Env) -> Result<Response> {
 /// - 200: same shape as list
 pub async fn list_by_from(inbox_param: &str, from_param: &str, env: &Env) -> Result<Response> {
     let emails = service::mail::list_from_sender(env, &decode_param(inbox_param), &decode_param(from_param)).await?;
-    json_response(&InboxResponse { emails }, 200)
-}
-
-/// GET /api/inbox/:inbox/forward_from/:from
-///
-/// List emails filtered by exact forwarding source (case-insensitive).
-///
-/// - 200: same shape as list
-pub async fn list_by_forward(inbox_param: &str, from_param: &str, env: &Env) -> Result<Response> {
-    let emails = service::mail::list_from_forwarder(env, &decode_param(inbox_param), &decode_param(from_param)).await?;
     json_response(&InboxResponse { emails }, 200)
 }
 

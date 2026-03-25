@@ -1,4 +1,4 @@
-import { filterFrom, filterFwd, setFilterFrom, setFilterFwd, refreshEmails } from "../stores/inbox";
+import { filterFrom, setFilterFrom, refreshEmails } from "../stores/inbox";
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 function debouncedRefresh() {
@@ -14,14 +14,6 @@ export default function FilterRow() {
         value={filterFrom()}
         onInput={(e) => {
           setFilterFrom(e.currentTarget.value);
-          debouncedRefresh();
-        }}
-      />
-      <input
-        placeholder="Filter by forward source..."
-        value={filterFwd()}
-        onInput={(e) => {
-          setFilterFwd(e.currentTarget.value);
           debouncedRefresh();
         }}
       />

@@ -1,5 +1,5 @@
 import { createSignal, Show } from "solid-js";
-import { emails, clearEmails, refreshEmails, setFilterFrom, setFilterFwd } from "../stores/inbox";
+import { emails, clearEmails, refreshEmails, setFilterFrom } from "../stores/inbox";
 import FilterRow from "./FilterRow";
 
 export default function Toolbar() {
@@ -16,7 +16,6 @@ export default function Toolbar() {
     if (filterVisible()) {
       setFilterVisible(false);
       setFilterFrom("");
-      setFilterFwd("");
       refreshEmails();
     } else {
       setFilterVisible(true);

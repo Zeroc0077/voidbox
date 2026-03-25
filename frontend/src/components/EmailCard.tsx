@@ -5,7 +5,6 @@ interface Props {
   from: string;
   subject: string;
   receivedAt: number;
-  forwardFrom?: string;
   onClick: (id: string) => void;
 }
 
@@ -21,9 +20,6 @@ export default function EmailCard(props: Props) {
           <span class="email-card-from">{props.from}</span>
           <span class="email-card-time">{timeAgo(props.receivedAt)}</span>
         </div>
-        {props.forwardFrom && props.forwardFrom !== props.from && (
-          <div class="email-card-fwd">via {props.forwardFrom}</div>
-        )}
       </div>
     </div>
   );

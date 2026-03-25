@@ -11,7 +11,7 @@ use crate::types::*;
 ///
 /// Retrieve full email content including text body, HTML body, and headers.
 ///
-/// - 200: `{"id", "from", "forwardFrom", "to", "inbox", "subject", "text", "html", "headers", "receivedAt"}`
+/// - 200: `{"id", "from", "inbox", "subject", "text", "html", "headers", "receivedAt"}`
 /// - 404: email not found
 pub async fn get(inbox_param: &str, id: &str, env: &Env) -> Result<Response> {
     match service::mail::get_detail(env, &decode_param(inbox_param), id).await? {

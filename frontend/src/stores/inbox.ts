@@ -5,7 +5,6 @@ import { showToast } from "./toast";
 export interface EmailSummary {
   id: string;
   from: string;
-  forwardFrom?: string;
   subject: string;
   receivedAt: number;
 }
@@ -18,12 +17,11 @@ const [mailDomains, setMailDomains] = createSignal<string[]>([]);
 const [selectedDomain, setSelectedDomain] = createSignal("");
 const [emails, setEmails] = createSignal<EmailSummary[]>([]);
 const [filterFrom, setFilterFrom] = createSignal("");
-const [filterFwd, setFilterFwd] = createSignal("");
 
 export {
   currentInbox, expiresAt, mailDomains, selectedDomain,
-  emails, filterFrom, filterFwd,
-  setMailDomains, setSelectedDomain, setFilterFrom, setFilterFwd,
+  emails, filterFrom,
+  setMailDomains, setSelectedDomain, setFilterFrom,
 };
 
 function persistInbox(inbox: string, exp: number) {
@@ -73,10 +71,8 @@ export async function refreshEmails() {
   if (!inbox) return;
   try {
     const ff = filterFrom().trim();
-    const fw = filterFwd().trim();
     let path = "/inbox/" + encodeURIComponent(inbox);
     if (ff) path += "/from/" + encodeURIComponent(ff);
-    else if (fw) path += "/forward_from/" + encodeURIComponent(fw);
     const data = await api<{ emails: EmailSummary[] }>("GET", path);
     setEmails(data.emails || []);
   } catch {
@@ -101,7 +97,6 @@ function resetInboxState() {
     persistInbox("", 0);
     setEmails([]);
     setFilterFrom("");
-    setFilterFwd("");
   });
 }
 

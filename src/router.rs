@@ -51,7 +51,6 @@ pub async fn handle_request(mut req: Request, env: &Env) -> Result<Response> {
         (Method::Get, ["inbox", inbox, "status"])               => handlers::inbox::status(inbox, env).await,
         (Method::Put, ["inbox", inbox, "renew"])                => handlers::inbox::renew(inbox, env).await,
         (Method::Get, ["inbox", inbox, "from", from])        => handlers::inbox::list_by_from(inbox, from, env).await,
-        (Method::Get, ["inbox", inbox, "forward_from", from])=> handlers::inbox::list_by_forward(inbox, from, env).await,
         (Method::Get, ["mail", inbox, id])                   => handlers::mail::get(inbox, id, env).await,
         (Method::Delete, ["mail", inbox, id])                => handlers::mail::delete(inbox, id, env).await,
         _ => json_response(&ErrorResponse { error: "Not found".into() }, 404),

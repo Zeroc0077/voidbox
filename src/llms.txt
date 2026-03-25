@@ -26,13 +26,12 @@ All timestamps are Unix seconds (integer). Inbox addresses are full email format
 
 ### Email Listing
 
-- `GET /api/inbox/{inbox}`: List all emails for an inbox, newest first. Returns `{"emails": [{"id", "from", "forwardFrom", "subject", "receivedAt"}]}`.
+- `GET /api/inbox/{inbox}`: List all emails for an inbox, newest first. Returns `{"emails": [{"id", "from", "subject", "receivedAt"}]}`.
 - `GET /api/inbox/{inbox}/from/{sender}`: Filter emails by exact sender address (case-insensitive).
-- `GET /api/inbox/{inbox}/forward_from/{forwarder}`: Filter emails by forwarding source address (case-insensitive).
 
 ### Email Operations
 
-- `GET /api/mail/{inbox}/{id}`: Get full email content. Returns `{"id", "from", "forwardFrom", "inbox", "subject", "text", "html", "headers", "receivedAt"}`. Returns 404 if not found.
+- `GET /api/mail/{inbox}/{id}`: Get full email content. Returns `{"id", "from", "inbox", "subject", "text", "html", "headers", "receivedAt"}`. Returns 404 if not found.
 - `DELETE /api/mail/{inbox}/{id}`: Delete a single email. Returns `{"ok": true}`.
 
 ## Usage Example

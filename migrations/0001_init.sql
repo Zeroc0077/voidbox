@@ -10,7 +10,6 @@ CREATE TABLE mail (
   id TEXT PRIMARY KEY,
   inbox_id TEXT NOT NULL REFERENCES inbox(id) ON DELETE CASCADE,
   from_addr TEXT NOT NULL,
-  forward_from TEXT NOT NULL DEFAULT '',
   subject TEXT NOT NULL DEFAULT '',
   text_body TEXT NOT NULL DEFAULT '',
   html_body TEXT NOT NULL DEFAULT '',

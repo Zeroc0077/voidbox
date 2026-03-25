@@ -18,7 +18,6 @@ pub struct InboxTimestamps {
 pub struct MailRow {
     pub id: String,
     pub from_addr: String,
-    pub forward_from: String,
     pub subject: String,
     pub received_at: f64,
 }
@@ -28,7 +27,6 @@ pub struct FullMailRow {
     pub id: String,
     pub inbox_id: String,
     pub from_addr: String,
-    pub forward_from: String,
     pub subject: String,
     pub text_body: String,
     pub html_body: String,
@@ -39,7 +37,6 @@ pub struct FullMailRow {
 pub struct MailEntry {
     pub id: String,
     pub from: String,
-    pub forward_from: String,
     pub inbox: String,
     pub subject: String,
     pub text: String,
@@ -54,7 +51,6 @@ pub struct MailEntry {
 pub struct MailMeta {
     pub id: String,
     pub from: String,
-    pub forward_from: String,
     pub subject: String,
     pub received_at: u64,
 }
@@ -64,7 +60,6 @@ pub struct MailMeta {
 pub struct MailEntryResponse {
     pub id: String,
     pub from: String,
-    pub forward_from: String,
     pub inbox: String,
     pub subject: String,
     pub text: String,

@@ -29,7 +29,7 @@ pub async fn receive_email(raw: &[u8], to: &str, env: &Env) -> Result<()> {
 }
 
 /// Parse raw MIME bytes into a structured MailEntry.
-/// Extracts sender, subject, body (text + HTML), forwarding info, and headers.
+/// Extracts sender, subject, body (text + HTML), and headers.
 fn parse_mime(raw: &[u8], inbox: &str) -> Result<MailEntry> {
     let parsed = MessageParser::default().parse(raw)
         .ok_or_else(|| Error::from("Failed to parse email"))?;
@@ -39,11 +39,6 @@ fn parse_mime(raw: &[u8], inbox: &str) -> Result<MailEntry> {
         .and_then(|a| a.address())
         .unwrap_or_default()
         .to_string();
-
-    // Return-Path indicates the actual forwarding source; fall back to From
-    let forward_from = parsed.return_address()
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| from.clone());
 
     let mut header_map = serde_json::Map::new();
     for header in parsed.headers() {
@@ -66,7 +61,6 @@ fn parse_mime(raw: &[u8], inbox: &str) -> Result<MailEntry> {
     Ok(MailEntry {
         id: nanoid::nanoid!(10),
         from,
-        forward_from,
         inbox: inbox.to_string(),
         subject: parsed.subject().unwrap_or("").to_string(),
         text: parsed.body_text(0).unwrap_or_default().to_string(),
@@ -103,13 +97,6 @@ pub async fn list_from_sender(env: &Env, inbox: &str, sender: &str) -> Result<Ve
     Ok(rows.into_iter().map(row_to_meta).collect())
 }
 
-/// List emails filtered by exact forwarding source.
-pub async fn list_from_forwarder(env: &Env, inbox: &str, forwarder: &str) -> Result<Vec<MailMeta>> {
-    let db = repo::get_db(env)?;
-    let rows = repo::mail::find_by_forwarder(&db, inbox, forwarder).await?;
-    Ok(rows.into_iter().map(row_to_meta).collect())
-}
-
 /// Get full email content by ID.
 pub async fn get_detail(env: &Env, inbox: &str, mail_id: &str) -> Result<Option<MailEntryResponse>> {
     let db = repo::get_db(env)?;
@@ -133,7 +120,6 @@ fn row_to_meta(r: MailRow) -> MailMeta {
     MailMeta {
         id: r.id,
         from: r.from_addr,
-        forward_from: r.forward_from,
         subject: r.subject,
         received_at: r.received_at as u64,
     }
@@ -143,7 +129,6 @@ fn row_to_response(r: FullMailRow) -> MailEntryResponse {
     MailEntryResponse {
         id: r.id,
         from: r.from_addr,
-        forward_from: r.forward_from,
         inbox: r.inbox_id,
         subject: r.subject,
         text: r.text_body,

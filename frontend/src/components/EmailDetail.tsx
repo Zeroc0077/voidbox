@@ -8,7 +8,6 @@ import { avatarColor, avatarInitial, formatDate, formatHeaders } from "../lib/ut
 interface MailDetail {
   id: string;
   from: string;
-  forwardFrom?: string;
   inbox: string;
   subject: string;
   text?: string;
@@ -112,11 +111,6 @@ export default function EmailDetail(props: Props) {
                   <div class="detail-meta-item">
                     <span class="label">Date:</span> <span>{formatDate(m().receivedAt)}</span>
                   </div>
-                  {m().forwardFrom && m().forwardFrom !== m().from && (
-                    <div class="detail-meta-item">
-                      <span class="label">Via:</span> <span>{m().forwardFrom}</span>
-                    </div>
-                  )}
                 </div>
                 <Show when={!!m().html && !!m().text}>
                   <div class="detail-view-tabs">

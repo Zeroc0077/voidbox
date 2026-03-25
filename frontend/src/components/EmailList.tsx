@@ -27,7 +27,6 @@ export default function EmailList(props: Props) {
             from={m.from}
             subject={m.subject}
             receivedAt={m.receivedAt}
-            forwardFrom={m.forwardFrom}
             onClick={props.onSelectEmail}
           />
         )}
