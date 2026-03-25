@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, batch } from "solid-js";
 import { api } from "../lib/api";
 import { showToast } from "./toast";
 
@@ -96,14 +96,22 @@ export async function renewInbox() {
   }
 }
 
+function resetInboxState() {
+  batch(() => {
+    persistInbox("", 0);
+    setEmails([]);
+    setFilterFrom("");
+    setFilterFwd("");
+  });
+}
+
 export async function deleteInbox() {
   const inbox = currentInbox();
   if (!inbox || !confirm("Delete inbox " + inbox + "?")) return;
   try {
     await api<any>("DELETE", "/inbox/" + encodeURIComponent(inbox));
   } catch {}
-  persistInbox("", 0);
-  setEmails([]);
+  resetInboxState();
   showToast("Inbox deleted");
 }
 
@@ -120,9 +128,13 @@ export async function clearEmails() {
 }
 
 export function expireInbox() {
-  persistInbox("", 0);
-  setEmails([]);
+  resetInboxState();
   showToast("Inbox expired", "error");
+}
+
+export function switchInbox() {
+  resetInboxState();
+  showToast("Inbox switched");
 }
 
 export function copyAddress() {

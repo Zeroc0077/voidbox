@@ -1,4 +1,4 @@
-import { currentInbox, renewInbox, deleteInbox, copyAddress } from "../stores/inbox";
+import { currentInbox, renewInbox, deleteInbox, switchInbox, copyAddress } from "../stores/inbox";
 import TTLBadge from "./TTLBadge";
 
 export default function InboxActive() {
@@ -16,6 +16,11 @@ export default function InboxActive() {
           <button class="btn-icon" onClick={copyAddress} title="Copy address">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+          </button>
+          <button class="btn-icon" onClick={switchInbox} title="Switch inbox">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 3 21 3 21 9" /><path d="M21 3l-7 7" /><polyline points="9 21 3 21 3 15" /><path d="M3 21l7-7" />
             </svg>
           </button>
           <button class="btn-icon btn-icon-danger" onClick={deleteInbox} title="Delete inbox">
