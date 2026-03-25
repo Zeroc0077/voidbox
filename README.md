@@ -32,7 +32,7 @@ wrangler d1 create voidbox
 wrangler d1 migrations apply voidbox --remote
 
 # 5. Set auth token, it's recommended to set a strong token
-wrangler secret put <AUTH_TOKEN>
+wrangler secret put AUTH_TOKEN
 
 # 6. Optional: Configure routes in wrangler.toml
 # By default, the Worker is accessible at <name>.workers.dev with preview URLs enabled.
@@ -51,9 +51,9 @@ wrangler deploy
 
 After deploying, configure Cloudflare to forward emails to your Worker:
 
-1. Add MX records for your domain pointing to Cloudflare
-2. Cloudflare Dashboard > Email > Email Routing > Catch-all > Send to Worker > `voidbox`
-3. Optional: To use a subdomain, go to Email Routing > Settings > Subdomains and add your subdomain
+1. Cloudflare Dashboard > Email > Email Routing > Catch-all > Send to Worker > `voidbox`
+2. Optional: To use a subdomain, go to Email Routing > Settings > Subdomains and add your subdomain
+3. Optional: You can bind more than one domain catch-all rules to `voidbox`
 
 ## Configuration
 
