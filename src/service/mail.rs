@@ -1,5 +1,6 @@
 use worker::*;
 use mail_parser::MessageParser;
+use email_address::EmailAddress;
 use super::{get_env_usize, DEFAULT_MAX_MAILS, DEFAULT_MAX_MAIL_SIZE};
 use crate::repo;
 use crate::repo::now_secs;
@@ -16,7 +17,7 @@ pub async fn receive_email(raw: &[u8], to: &str, env: &Env) -> Result<()> {
     }
 
     let inbox = to.to_lowercase();
-    if inbox.is_empty() || !inbox.contains('@') {
+    if !EmailAddress::is_valid(&inbox) {
         return Err(Error::from("Malformed email address"));
     }
 

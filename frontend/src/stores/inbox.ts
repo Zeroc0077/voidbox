@@ -38,7 +38,8 @@ function persistInbox(inbox: string, exp: number) {
 
 export async function register(prefix: string, domain: string) {
   const inbox = prefix.trim().toLowerCase() + "@" + domain;
-  if (!prefix.trim() || !domain) return;
+  if (!prefix.trim()) { showToast("Enter a prefix", "error"); return; }
+  if (!domain) { showToast("Select a domain", "error"); return; }
   try {
     const res = await api<{ expiresAt: number }>("POST", "/inbox/" + encodeURIComponent(inbox));
     persistInbox(inbox, res.expiresAt);
