@@ -12,8 +12,10 @@ Temporary email service built on Cloudflare Workers in Rust, optimized for Cloud
 
 ## Prerequisites
 
+- [Node.js](https://nodejs.org/) (v18+) for frontend build
 - [Rust](https://rustup.rs/) with wasm target: `rustup target add wasm32-unknown-unknown`
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/): `npm install -g wrangler`
+- GNU Make
 - A Cloudflare account with a domain
 
 ## Quick Start
@@ -41,10 +43,26 @@ wrangler secret put AUTH_TOKEN
 #   preview_urls = false
 #   routes = [{ pattern = "mail.example.com", custom_domain = true }]
 
-# 7. Deploy
+# 7. Deploy (builds frontend + WASM automatically)
 wrangler deploy
 
 # 8. Set up Email Routing (see below)
+```
+
+## Development
+
+```bash
+# Build frontend + backend
+make build
+
+# Frontend dev server with HMR, proxy API to wrangler dev
+make dev
+
+# Deploy to Cloudflare
+make deploy
+
+# Clean build artifacts
+make clean
 ```
 
 ## Email Routing Setup
