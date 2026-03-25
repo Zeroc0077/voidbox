@@ -3,7 +3,7 @@ main = "src/entry.mjs"
 compatibility_date = "2024-01-01"
 
 [build]
-command = "cargo install -q worker-build && worker-build --release"
+command = "make build"
 
 [vars]
 MAX_MAILS_PER_INBOX = "100"

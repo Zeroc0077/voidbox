@@ -4,7 +4,7 @@ use crate::service;
 use crate::handlers::{self, json_response};
 use crate::types::*;
 
-const INDEX_HTML: &str = include_str!("html/index.html");
+const INDEX_HTML: &str = include_str!("../frontend/dist/index.html");
 const LLMS_TXT: &str = include_str!("llms.txt");
 
 pub async fn handle_request(mut req: Request, env: &Env) -> Result<Response> {
