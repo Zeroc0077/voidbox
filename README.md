@@ -34,12 +34,12 @@ wrangler d1 migrations apply voidbox --remote
 # 5. Set auth token, it's recommended to set a strong token
 wrangler secret put AUTH_TOKEN
 
-# 6. Optional: Configure routes in wrangler.toml
+# 6. Optional: Configure custom domain in wrangler.toml
 # By default, the Worker is accessible at <name>.workers.dev with preview URLs enabled.
-# To disable preview URLs or bind a custom domain, add to wrangler.toml:
+# To route a custom domain, add to wrangler.toml:
 #   workers_dev = false
 #   preview_urls = false
-#   routes = [{ pattern = "mail.example.com/*", zone_name = "example.com" }]
+#   routes = [{ pattern = "mail.example.com", custom_domain = true }]
 
 # 7. Deploy
 wrangler deploy
