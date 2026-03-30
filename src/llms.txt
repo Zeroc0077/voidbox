@@ -2,71 +2,321 @@
 
 > Disposable temporary email service. Register an inbox, receive emails, read and delete them. All inboxes auto-expire after 1 hour. Powered by Cloudflare Workers + D1.
 
-All API endpoints require authentication via Bearer token in the `Authorization` header:
+## Authentication
+
+All API endpoints (except `/llms.txt`) require a Bearer token:
 
 ```
 Authorization: Bearer <TOKEN>
 ```
 
-All timestamps are Unix seconds (integer). Inbox addresses are full email format like `user@domain.com`. URL parameters containing `@` must be percent-encoded as `%40`.
+Unauthenticated requests return `403 Forbidden`.
 
-## API Endpoints
+## Conventions
 
-### Configuration
+- All timestamps are **Unix seconds** (integer).
+- Inbox addresses are full email format: `user@domain.com`.
+- URL path parameters containing `@` must be **percent-encoded** as `%40` (e.g., `test%40domain.com`).
+- All request/response bodies are JSON with `Content-Type: application/json`.
+- Field names use **camelCase**.
 
-- `GET /api/config`: Returns available mail domains and relay configuration. Response: `{"mailDomains": ["domain.com"], "relayEnabled": true, "relayDomains": ["mozmail.com"]}`
+---
 
-### Inbox Management
+## Endpoints
 
-- `POST /api/inbox/{inbox}`: Register a new inbox. `inbox` is a full email address (e.g., `test%40domain.com`). Returns `{"inbox", "createdAt", "expiresAt"}` with status 201. Returns 409 if already registered, 400 if invalid address.
-- `GET /api/inbox/{inbox}/status`: Get inbox TTL status. Returns `{"inbox", "createdAt", "expiresAt"}`. Returns 404 if expired or not found.
-- `PUT /api/inbox/{inbox}/renew`: Extend inbox TTL by 1 hour from now. Returns updated `{"inbox", "createdAt", "expiresAt"}`. Returns 404 if expired.
-- `DELETE /api/inbox/{inbox}`: Delete inbox and all its emails. Returns `{"ok": true}`.
-- `DELETE /api/inbox/{inbox}/emails`: Clear all emails but keep the inbox active. Returns `{"ok": true}`.
+### GET /api/config
 
-### Email Listing
+Returns service configuration including allowed mail domains and relay settings.
 
-- `GET /api/inbox/{inbox}`: List all emails for an inbox, newest first. Returns `{"emails": [{"id", "from", "subject", "receivedAt"}]}`.
-- `GET /api/inbox/{inbox}/from/{sender}`: Filter emails by exact sender address (case-insensitive).
+**Parameters:** None.
 
-### Email Operations
+**Response 200:**
 
-- `GET /api/mail/{inbox}/{id}`: Get full email content. Returns `{"id", "from", "inbox", "subject", "text", "html", "headers", "receivedAt"}`. Returns 404 if not found.
-- `DELETE /api/mail/{inbox}/{id}`: Delete a single email. Returns `{"ok": true}`.
-
-## Usage Example
-
-```
-# 1. Get available domains
-GET /api/config
-
-# 2. Register an inbox
-POST /api/inbox/mytest%40domain.com
-
-# 3. (Send an email to mytest@domain.com from external service)
-
-# 4. List received emails
-GET /api/inbox/mytest%40domain.com
-
-# 5. Read email content
-GET /api/mail/mytest%40domain.com/{emailId}
-
-# 6. Extend inbox lifetime
-PUT /api/inbox/mytest%40domain.com/renew
-
-# 7. Cleanup
-DELETE /api/inbox/mytest%40domain.com
+```json
+{
+  "mailDomains": ["domain.com", "*.example.com"],
+  "relayEnabled": true,
+  "relayDomains": ["mozmail.com", "simplelogin.com"],
+  "relayInboxes": ["me@domain.com"]
+}
 ```
 
-## Constraints
+| Field | Type | Description |
+|-------|------|-------------|
+| `mailDomains` | `string[]` | Allowed domains for direct inbox registration. Entries prefixed with `*.` are wildcard domains matching any subdomain. |
+| `relayEnabled` | `boolean` | Whether relay email forwarding is enabled. |
+| `relayDomains` | `string[]` | Allowed relay alias domains (e.g., Firefox Relay or SimpleLogin domains). Empty when `relayEnabled` is false. Relay inboxes can be registered using these domains. |
+| `relayInboxes` | `string[]` | Preconfigured relay recipient addresses (the real addresses that relay services forward to). Empty when `relayEnabled` is false. Provided for UI convenience. |
 
-- Inbox TTL: 1 hour (extendable via renew)
-- Max inboxes: 50 (configurable, FIFO eviction)
-- Max emails per inbox: 100 (configurable, oldest evicted first)
-- Max email size: 256 KB (configurable, oversized emails rejected)
-- Local part: 1-64 chars, alphanumeric + `.` `_` `-` `+` only
-- Domain must be in the allowed list (see GET /api/config)
+---
+
+### POST /api/inbox/{inbox}
+
+Register a new temporary inbox. The inbox auto-expires after 1 hour.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address to register (percent-encoded). Domain must be in `mailDomains` or `relayDomains`. |
+
+**Response 201 (success):**
+
+```json
+{
+  "inbox": "test@domain.com",
+  "createdAt": 1711800000,
+  "expiresAt": 1711803600
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | The registered inbox address. |
+| `createdAt` | `integer` | Unix timestamp when the inbox was created. |
+| `expiresAt` | `integer` | Unix timestamp when the inbox will expire. |
+
+**Error responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Invalid email format or domain not in allowed list. |
+| 409 | Inbox already registered. |
+
+---
+
+### GET /api/inbox/{inbox}/status
+
+Get the TTL status of an active inbox.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+
+**Response 200:**
+
+```json
+{
+  "inbox": "test@domain.com",
+  "createdAt": 1711800000,
+  "expiresAt": 1711803600
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | The inbox address. |
+| `createdAt` | `integer` | Unix timestamp when the inbox was created. |
+| `expiresAt` | `integer` | Unix timestamp when the inbox will expire. |
+
+**Error responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 404 | Inbox not found or expired. |
+
+---
+
+### PUT /api/inbox/{inbox}/renew
+
+Extend the inbox TTL by 1 hour from the current time.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+
+**Response 200:**
+
+```json
+{
+  "inbox": "test@domain.com",
+  "createdAt": 1711800000,
+  "expiresAt": 1711807200
+}
+```
+
+Same fields as status response, with `expiresAt` updated to now + 1 hour.
+
+**Error responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 404 | Inbox not found or expired. |
+
+---
+
+### DELETE /api/inbox/{inbox}
+
+Permanently delete an inbox and all its emails.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+
+**Response 200:**
+
+```json
+{ "ok": true }
+```
+
+---
+
+### DELETE /api/inbox/{inbox}/emails
+
+Delete all emails in an inbox without removing the inbox itself. The inbox remains active.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+
+**Response 200:**
+
+```json
+{ "ok": true }
+```
+
+---
+
+### GET /api/inbox/{inbox}
+
+List all emails in an inbox, sorted by newest first.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+
+**Response 200:**
+
+```json
+{
+  "emails": [
+    {
+      "id": "abc123",
+      "from": "sender@example.com",
+      "subject": "Hello",
+      "receivedAt": 1711801234
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `emails` | `array` | List of email summaries, newest first. |
+| `emails[].id` | `string` | Unique email ID (nanoid, 10 chars). |
+| `emails[].from` | `string` | Sender email address. For relay emails, this is the original sender (not the relay intermediary). |
+| `emails[].subject` | `string` | Email subject line. |
+| `emails[].receivedAt` | `integer` | Unix timestamp when the email was received. |
+
+---
+
+### GET /api/inbox/{inbox}/from/{sender}
+
+List emails filtered by exact sender address (case-insensitive match).
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+| `sender` | `string` | Sender email address to filter by (percent-encoded). |
+
+**Response 200:** Same format as `GET /api/inbox/{inbox}`.
+
+---
+
+### GET /api/mail/{inbox}/{id}
+
+Get full email content including body text, HTML, and headers.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+| `id` | `string` | Email ID from the listing endpoint. |
+
+**Response 200:**
+
+```json
+{
+  "id": "abc123",
+  "from": "sender@example.com",
+  "inbox": "test@domain.com",
+  "subject": "Hello",
+  "text": "Plain text body",
+  "html": "<p>HTML body</p>",
+  "headers": {
+    "DKIM-Signature": "v=1; ...",
+    "Message-ID": "<abc@example.com>"
+  },
+  "receivedAt": 1711801234
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique email ID. |
+| `from` | `string` | Sender email address. For relay emails, this is the original sender. |
+| `inbox` | `string` | The inbox address this email belongs to. |
+| `subject` | `string` | Email subject line. |
+| `text` | `string` | Plain text body (may be empty if only HTML). |
+| `html` | `string` | HTML body (may be empty if only plain text). |
+| `headers` | `object` | Key-value map of email headers. Keys are header names, values are string representations. |
+| `receivedAt` | `integer` | Unix timestamp when the email was received. |
+
+**Error responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 404 | Email not found. |
+
+---
+
+### DELETE /api/mail/{inbox}/{id}
+
+Delete a single email.
+
+**Path parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `inbox` | `string` | Full email address (percent-encoded). |
+| `id` | `string` | Email ID. |
+
+**Response 200:**
+
+```json
+{ "ok": true }
+```
+
+---
 
 ## Relay Support
 
-When `relayEnabled` is true in `/api/config`, Voidbox accepts emails forwarded via relay services (Firefox Relay, SimpleLogin). Relay inboxes use the full alias address (e.g. `abc123@mozmail.com`) and must be registered like normal inboxes. The relay alias domain must be in the `relayDomains` list. Relay provider is auto-detected from email headers; sender is resolved to the original sender rather than the relay intermediary.
+When `relayEnabled` is true, Voidbox accepts emails forwarded via relay/alias services. Relay provider is **auto-detected** from email headers:
+
+| Provider | Detection | Inbox resolved from | Sender resolved from |
+|----------|-----------|---------------------|----------------------|
+| Firefox Relay | `Resent-From` header present | `From` header (mask address) | `Resent-From` header (real sender) |
+| SimpleLogin | `X-SimpleLogin-Type` header present | `To` header (alias address) | `X-SimpleLogin-Original-From` header (real sender) |
+
+Relay inboxes must be registered like normal inboxes, using a domain from `relayDomains`. If no relay headers are detected on an email arriving at a relay recipient, it falls back to normal direct delivery.
+
+## Constraints
+
+- Inbox TTL: 1 hour (extendable via renew, no limit on renewals)
+- Max inboxes: 50 (configurable, oldest evicted via FIFO when full)
+- Max emails per inbox: 100 (configurable, oldest trimmed)
+- Max email size: 256 KB (configurable, oversized rejected)
+- Inbox address: valid RFC 5321 email, domain must be in `mailDomains` or `relayDomains`

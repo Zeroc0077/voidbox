@@ -13,10 +13,12 @@ use crate::service::{get_env_bool, get_env_list};
 pub async fn get_config(env: &Env) -> Result<Response> {
     let relay_enabled = get_env_bool(env, "RELAY_ENABLED");
     let relay_domains = if relay_enabled { get_env_list(env, "RELAY_DOMAINS") } else { vec![] };
+    let relay_inboxes = if relay_enabled { get_env_list(env, "RELAY_INBOXES") } else { vec![] };
 
     json_response(&serde_json::json!({
         "mailDomains": get_mail_domains(env),
         "relayEnabled": relay_enabled,
         "relayDomains": relay_domains,
+        "relayInboxes": relay_inboxes,
     }), 200)
 }

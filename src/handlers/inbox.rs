@@ -6,22 +6,25 @@ use worker::*;
 use email_address::EmailAddress;
 use super::{decode_param, get_mail_domains, json_response};
 use crate::service;
+use crate::service::{get_env_bool, get_env_list};
 use crate::types::*;
 
 /// Validate that an inbox address is a valid email and uses an allowed domain.
-/// Domains support wildcards: `*.example.com` matches any `sub.example.com`.
-fn is_valid_inbox(inbox: &str, domains: &[String]) -> bool {
+/// Checks against both MAIL_DOMAINS and (if relay enabled) RELAY_DOMAINS.
+fn is_valid_inbox(inbox: &str, mail_domains: &[String], relay_domains: &[String]) -> bool {
     if !EmailAddress::is_valid(inbox) {
         return false;
     }
     let domain = inbox.split_once('@').unwrap().1;
-    domains.iter().any(|d| {
+    let matches_mail = mail_domains.iter().any(|d| {
         if let Some(suffix) = d.strip_prefix("*.") {
             domain.ends_with(suffix) && domain.len() > suffix.len() + 1 && domain.as_bytes()[domain.len() - suffix.len() - 1] == b'.'
         } else {
             d == domain
         }
-    })
+    });
+    if matches_mail { return true; }
+    relay_domains.iter().any(|d| d == domain)
 }
 
 /// POST /api/inbox/:inbox
@@ -36,7 +39,9 @@ fn is_valid_inbox(inbox: &str, domains: &[String]) -> bool {
 /// - 500: internal error
 pub async fn register(inbox_param: &str, env: &Env) -> Result<Response> {
     let inbox = decode_param(inbox_param);
-    if !is_valid_inbox(&inbox, &get_mail_domains(env)) {
+    let mail_domains = get_mail_domains(env);
+    let relay_domains = if get_env_bool(env, "RELAY_ENABLED") { get_env_list(env, "RELAY_DOMAINS") } else { vec![] };
+    if !is_valid_inbox(&inbox, &mail_domains, &relay_domains) {
         return json_response(&ErrorResponse { error: "Invalid inbox address".into() }, 400);
     }
     match service::inbox::register(env, &inbox).await {

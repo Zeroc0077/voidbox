@@ -113,7 +113,7 @@ Required API Token permissions:
 | `MAX_MAILS_PER_INBOX` | `100` | `50` | Max emails per inbox, oldest trimmed |
 | `MAX_MAIL_SIZE` | `262144` | `524288` | Max single email size in bytes, oversized emails rejected |
 | `RELAY_ENABLED` | `false` | `true` | Enable relay email support |
-| `RELAY_ADDRESSES` | - | `me@example.com,alt@example.org` | Comma-separated relay recipient addresses (SMTP RCPT TO targets) |
+| `RELAY_INBOXES` | - | `me@example.com,alt@example.org` | Comma-separated relay recipient addresses (SMTP RCPT TO targets) |
 | `RELAY_DOMAINS` | - | `mozmail.com,simplelogin.com` | Comma-separated allowed relay source domains, no wildcards |
 
 ## Free Tier Limits
@@ -143,13 +143,13 @@ Voidbox can receive emails forwarded through email relay/alias services. When en
 1. Set environment variables:
    ```
    RELAY_ENABLED=true
-   RELAY_ADDRESSES=me@example.com        # Your real email(s) that relay services forward to
+   RELAY_INBOXES=me@example.com           # Your real email(s) that relay services forward to
    RELAY_DOMAINS=mozmail.com,simplelogin.com  # Allowed relay alias domains
    ```
 2. Register relay alias addresses as inboxes in Voidbox (e.g. `abc123@mozmail.com`)
 3. Emails forwarded through the relay will appear in the corresponding inbox
 
-When an email arrives at a `RELAY_ADDRESSES` recipient but no relay headers are detected, it falls back to normal direct delivery.
+When an email arrives at a `RELAY_INBOXES` recipient but no relay headers are detected, it falls back to normal direct delivery.
 
 ## License
 

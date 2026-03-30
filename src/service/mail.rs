@@ -16,9 +16,9 @@ pub async fn receive_email(raw: &[u8], to: &str, env: &Env) -> Result<()> {
         return Err(Error::from("Email too large"));
     }
 
-    let relay_addresses = get_env_list(env, "RELAY_ADDRESSES");
+    let relay_inboxes = get_env_list(env, "RELAY_INBOXES");
     let is_relay_candidate = get_env_bool(env, "RELAY_ENABLED")
-        && relay_addresses.contains(&to.to_lowercase());
+        && relay_inboxes.contains(&to.to_lowercase());
 
     if is_relay_candidate {
         let relay_domains = get_env_list(env, "RELAY_DOMAINS");

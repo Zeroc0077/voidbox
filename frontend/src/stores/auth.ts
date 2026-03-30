@@ -13,13 +13,14 @@ export function setTokenValue(t: string) {
 
 export async function initSession() {
   const { api } = await import("../lib/api");
-  const { setMailDomains, setSelectedDomain, setRelayEnabled, setRelayDomains } = await import("./inbox");
-  const cfg = await api<{ mailDomains: string[]; relayEnabled: boolean; relayDomains: string[] }>("GET", "/config");
+  const { setMailDomains, setSelectedDomain, setRelayEnabled, setRelayDomains, setRelayInboxes } = await import("./inbox");
+  const cfg = await api<{ mailDomains: string[]; relayEnabled: boolean; relayDomains: string[]; relayInboxes: string[] }>("GET", "/config");
   const domains = cfg.mailDomains || [];
   setMailDomains(domains);
   if (domains.length > 0) setSelectedDomain(domains[0]);
   setRelayEnabled(cfg.relayEnabled || false);
   setRelayDomains(cfg.relayDomains || []);
+  setRelayInboxes(cfg.relayInboxes || []);
   setAuthenticated(true);
 }
 

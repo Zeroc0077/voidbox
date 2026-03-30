@@ -19,12 +19,13 @@ const [emails, setEmails] = createSignal<EmailSummary[]>([]);
 const [filterFrom, setFilterFrom] = createSignal("");
 const [relayEnabled, setRelayEnabled] = createSignal(false);
 const [relayDomains, setRelayDomains] = createSignal<string[]>([]);
+const [relayInboxes, setRelayInboxes] = createSignal<string[]>([]);
 
 export {
   currentInbox, expiresAt, mailDomains, selectedDomain,
-  emails, filterFrom, relayEnabled, relayDomains,
+  emails, filterFrom, relayEnabled, relayDomains, relayInboxes,
   setMailDomains, setSelectedDomain, setFilterFrom,
-  setRelayEnabled, setRelayDomains,
+  setRelayEnabled, setRelayDomains, setRelayInboxes,
 };
 
 function persistInbox(inbox: string, exp: number) {
