@@ -8,6 +8,7 @@ Temporary email service built on Cloudflare Workers in Rust, optimized for Cloud
 - Store emails in Cloudflare D1 database
 - Configurable FIFO emails storage eviction policy
 - Token authentication
+- Relay support: auto-detect and handle emails forwarded via Firefox Relay or SimpleLogin
 - Agent-friendly API docs at `/llms.txt`
 
 ## Prerequisites
@@ -111,6 +112,9 @@ Required API Token permissions:
 | `MAX_INBOXES` | `50` | `200` | Max concurrent inboxes, oldest evicted first |
 | `MAX_MAILS_PER_INBOX` | `100` | `50` | Max emails per inbox, oldest trimmed |
 | `MAX_MAIL_SIZE` | `262144` | `524288` | Max single email size in bytes, oversized emails rejected |
+| `RELAY_ENABLED` | `false` | `true` | Enable relay email support |
+| `RELAY_ADDRESSES` | - | `me@example.com,alt@example.org` | Comma-separated relay recipient addresses (SMTP RCPT TO targets) |
+| `RELAY_DOMAINS` | - | `mozmail.com,simplelogin.com` | Comma-separated allowed relay source domains, no wildcards |
 
 ## Free Tier Limits
 
@@ -122,6 +126,30 @@ This project is designed to run entirely within Cloudflare's free tier. Each inb
 | [D1 Writes](https://developers.cloudflare.com/d1/platform/pricing/) | 4 | 100,000 | ~25,000 |
 | [D1 Reads](https://developers.cloudflare.com/d1/platform/pricing/) | 5 | 5,000,000 | ~1,000,000 |
 | [D1 Storage](https://developers.cloudflare.com/d1/platform/pricing/) | ~5 KB | 5 GB | ~1,000,000 cumulative |
+
+## Relay Support
+
+Voidbox can receive emails forwarded through email relay/alias services. When enabled, relay emails are auto-detected and the inbox/sender are resolved from relay-specific headers.
+
+### Supported Providers
+
+| Provider | Inbox Source | Sender Source | Detection |
+|----------|-------------|---------------|-----------|
+| Firefox Relay | `From` header (mask address) | `Resent-From` header | `Resent-From` header present |
+| SimpleLogin | `To` header (alias address) | `X-SimpleLogin-Original-From` header | `X-SimpleLogin-Type` header present |
+
+### Setup
+
+1. Set environment variables:
+   ```
+   RELAY_ENABLED=true
+   RELAY_ADDRESSES=me@example.com        # Your real email(s) that relay services forward to
+   RELAY_DOMAINS=mozmail.com,simplelogin.com  # Allowed relay alias domains
+   ```
+2. Register relay alias addresses as inboxes in Voidbox (e.g. `abc123@mozmail.com`)
+3. Emails forwarded through the relay will appear in the corresponding inbox
+
+When an email arrives at a `RELAY_ADDRESSES` recipient but no relay headers are detected, it falls back to normal direct delivery.
 
 ## License
 

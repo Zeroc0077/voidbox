@@ -10,6 +10,9 @@ MAX_MAILS_PER_INBOX = "100"
 MAX_INBOXES = "50"
 MAX_MAIL_SIZE = "262144"
 MAIL_DOMAINS = "your-domain.com"
+RELAY_ENABLED = "false"
+RELAY_ADDRESSES = "me@your-domain.com"
+RELAY_DOMAINS = "mozmail.com,simplelogin.com"
 
 [[d1_databases]]
 binding = "DB"

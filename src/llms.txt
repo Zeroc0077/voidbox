@@ -14,7 +14,7 @@ All timestamps are Unix seconds (integer). Inbox addresses are full email format
 
 ### Configuration
 
-- `GET /api/config`: Returns available mail domains. Response: `{"mailDomains": ["domain.com"]}`
+- `GET /api/config`: Returns available mail domains and relay configuration. Response: `{"mailDomains": ["domain.com"], "relayEnabled": true, "relayDomains": ["mozmail.com"]}`
 
 ### Inbox Management
 
@@ -66,3 +66,7 @@ DELETE /api/inbox/mytest%40domain.com
 - Max email size: 256 KB (configurable, oversized emails rejected)
 - Local part: 1-64 chars, alphanumeric + `.` `_` `-` `+` only
 - Domain must be in the allowed list (see GET /api/config)
+
+## Relay Support
+
+When `relayEnabled` is true in `/api/config`, Voidbox accepts emails forwarded via relay services (Firefox Relay, SimpleLogin). Relay inboxes use the full alias address (e.g. `abc123@mozmail.com`) and must be registered like normal inboxes. The relay alias domain must be in the `relayDomains` list. Relay provider is auto-detected from email headers; sender is resolved to the original sender rather than the relay intermediary.
