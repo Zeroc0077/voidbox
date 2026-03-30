@@ -39,7 +39,8 @@ export default function InboxRegister() {
 
   function onQuickRegister(addr: string) {
     setShowRelayInboxes(false);
-    registerRelay(addr);
+    const [prefix, domain] = addr.split("@");
+    register(prefix, domain);
   }
 
   function onKeyDown(e: KeyboardEvent) {
