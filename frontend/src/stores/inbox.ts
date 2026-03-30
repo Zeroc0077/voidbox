@@ -17,11 +17,14 @@ const [mailDomains, setMailDomains] = createSignal<string[]>([]);
 const [selectedDomain, setSelectedDomain] = createSignal("");
 const [emails, setEmails] = createSignal<EmailSummary[]>([]);
 const [filterFrom, setFilterFrom] = createSignal("");
+const [relayEnabled, setRelayEnabled] = createSignal(false);
+const [relayDomains, setRelayDomains] = createSignal<string[]>([]);
 
 export {
   currentInbox, expiresAt, mailDomains, selectedDomain,
-  emails, filterFrom,
+  emails, filterFrom, relayEnabled, relayDomains,
   setMailDomains, setSelectedDomain, setFilterFrom,
+  setRelayEnabled, setRelayDomains,
 };
 
 function persistInbox(inbox: string, exp: number) {
@@ -37,13 +40,34 @@ function persistInbox(inbox: string, exp: number) {
 }
 
 export async function register(prefix: string, domain: string) {
-  const inbox = prefix.trim().toLowerCase() + "@" + domain;
+  const inbox = prefix.trim().toLowerCase() + (domain ? "@" + domain : "");
   if (!prefix.trim()) { showToast("Enter a prefix", "error"); return; }
   if (!domain) { showToast("Select a domain", "error"); return; }
   try {
     const res = await api<{ expiresAt: number }>("POST", "/inbox/" + encodeURIComponent(inbox));
     persistInbox(inbox, res.expiresAt);
     showToast("Inbox registered");
+    await Promise.all([refreshStatus(), refreshEmails()]);
+  } catch (e: any) {
+    if (e.message.includes("already registered")) {
+      persistInbox(inbox, Math.floor(Date.now() / 1000) + 3600);
+      showToast("Switched to existing inbox");
+      await Promise.all([refreshStatus(), refreshEmails()]);
+    } else {
+      showToast(e.message, "error");
+    }
+  }
+}
+
+export async function registerRelay(address: string) {
+  const inbox = address.trim().toLowerCase();
+  if (!inbox || !inbox.includes("@")) { showToast("Enter a valid email address", "error"); return; }
+  const domain = inbox.split("@")[1];
+  if (!relayDomains().includes(domain)) { showToast("Domain not in relay domains", "error"); return; }
+  try {
+    const res = await api<{ expiresAt: number }>("POST", "/inbox/" + encodeURIComponent(inbox));
+    persistInbox(inbox, res.expiresAt);
+    showToast("Relay inbox registered");
     await Promise.all([refreshStatus(), refreshEmails()]);
   } catch (e: any) {
     if (e.message.includes("already registered")) {
